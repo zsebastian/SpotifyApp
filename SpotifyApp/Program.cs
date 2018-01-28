@@ -10,11 +10,14 @@ using Microsoft.Extensions.Logging;
 
 namespace SpotifyApp
 {
-    public class Program
+    public static class Program
     {
+    	public static Config config;
+
         public static void Main(string[] args)
         {
-            BuildWebHost(args).Run();
+        	config = Config.From("config.json");
+           BuildWebHost(args).Run();
         }
 
         public static IWebHost BuildWebHost(string[] args) =>
