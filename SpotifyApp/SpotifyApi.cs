@@ -160,6 +160,59 @@ namespace SpotifyApp
 			public Inner categories;
 		}
 
+      	public struct Tracks
+		{
+			public string href;
+			public int total;
+		}
+
+      	public struct User
+		{
+			public Dictionary<string, string> external_urls;
+			public string href;
+			public string type;
+			public string uri;
+		}
+      	public struct Image
+		{
+			public int height;
+			public int width;
+			public string url;
+		}
+
+		public struct Playlist
+		{
+			public bool collaborative;
+			public Dictionary<string, string> external_urls;
+			public string href;
+			public string id;
+			public Image[] images;
+			public string name;
+			public User owner;
+			// uh oh.
+			// public bool public;
+			public string snapshot_id;
+			public Tracks tracks;
+			public string type;
+			public string uri;
+		}
+
+		public struct Playlists
+		{
+			public struct Inner
+			{
+				public string href;
+				public Playlist[] items; 
+				public int limit;
+				public int offset;
+				public int total;
+				public string next;
+				public string prev;
+			}
+
+			public Inner playlists;
+		}
+
 		public async Task<Category[]> BrowseAllCategoriesAsync(string token)
 		{
 			List<Category> categories = new List<Category>();
@@ -185,6 +238,34 @@ namespace SpotifyApp
 		public async Task<Response<Categories>> BrowseCategoriesAsync(int offset, int limit, string token)
 		{
 			return await GetAsync<Categories>(string.Format("/browse/categories?offset={0}&limit={1}", offset, limit),
+					new AccessTokenAuthenticator(token));
+		}
+
+		public async Task<Playlist[]> BrowseAllCategoryPlaylistsAsync(string categoryId, string token)
+		{
+			List<Playlist> playlists = new List<Playlist>();
+			int offset = 0;
+			int limit = 10;
+			var next = await BrowseCategoryPlaylistsAsync(categoryId, offset, limit, token);
+
+			while(next.Content.playlists.next != null)
+			{
+				// if playlists.next != null we know we can continue.
+				// It is set to the url they want us to call, but this
+				// will work as well.
+				offset += limit;
+				playlists.AddRange(next.Content.playlists.items);
+				next = await BrowseCategoryPlaylistsAsync(categoryId, offset, limit, token);
+			}
+			if (next.Content.playlists.items != null)
+				playlists.AddRange(next.Content.playlists.items);
+
+			return playlists.ToArray();
+		}
+
+		public async Task<Response<Playlists>> BrowseCategoryPlaylistsAsync(string categoryId, int offset, int limit, string token)
+		{
+			return await GetAsync<Playlists>(string.Format("/browse/categories/{0}/playlists/?offset={1}&limit={2}", categoryId, offset, limit),
 					new AccessTokenAuthenticator(token));
 		}
 

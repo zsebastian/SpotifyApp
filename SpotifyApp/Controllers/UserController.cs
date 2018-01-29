@@ -58,7 +58,7 @@ namespace SpotifyApp.Controllers
 
 			var token = GetAccessToken(Request.Cookies["session_token"]);
 			var categories = Program.spotify.BrowseAllCategoriesAsync(token).Result;
-			ViewData["Message"] = string.Join("\n", categories.Select(c => c.name));
+			ViewData["Message"] = string.Join(", ", categories.Select(c => c.name));
 			ViewData["Categories"] = categories.Select(c => new KeyValuePair<string, string>(c.id, c.name));
 			return View();
 		}
@@ -67,8 +67,10 @@ namespace SpotifyApp.Controllers
 		{
 			if (!Request.Cookies.ContainsKey("session_token"))
 				return Error();
-
 			var token = GetAccessToken(Request.Cookies["session_token"]);
+			var playlists = Program.spotify.BrowseAllCategoryPlaylistsAsync(category, token).Result;
+			ViewData["Message"] = string.Join(", ", playlists.Select(c => c.name));
+
 			return View();
 		}
 
