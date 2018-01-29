@@ -22,9 +22,9 @@ namespace SpotifyApp.Controllers
         	if (error != null) return Error();
 
 			var token = Program.spotify.GetTokenAsync(redirectUri, code).Result;
-            ViewData["Message"] = "Authorized!";
-
-            return View();
+			var categories = Program.spotify.BrowseAllCategoriesAsync(token.Content.access_token).Result;
+			ViewData["Message"] = string.Join("\n", categories.Select(c => c.name));
+			return View();
         }
 
         public IActionResult Error()
