@@ -1,10 +1,13 @@
 using System;
+using System.Web;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 using SpotifyApp.Models;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace SpotifyApp.Controllers
 {
@@ -17,15 +20,57 @@ namespace SpotifyApp.Controllers
             return Redirect(uri);
         }
 
+        string CreateSession(string accessToken)
+		{
+			var sessionToken = Convert.ToBase64String(Guid.NewGuid().ToByteArray());
+			Program.cache.Set(string.Format("accessToken[{0}]", sessionToken), accessToken, TimeSpan.FromHours(3));
+			return sessionToken;
+		}
+
+		string GetAccessToken(string sessionToken)
+		{
+			string ret;
+			if (!Program.cache.TryGetValue(string.Format("accessToken[{0}]", sessionToken), out ret))
+				ret = null;
+			return ret;
+		}
+
         public IActionResult Authorized(string state, string code, string error)
         {
         	if (error != null) return Error();
 
 			var token = Program.spotify.GetTokenAsync(redirectUri, code).Result;
-			var categories = Program.spotify.BrowseAllCategoriesAsync(token.Content.access_token).Result;
-			ViewData["Message"] = string.Join("\n", categories.Select(c => c.name));
-			return View();
+			Response.Cookies.Append("session_token", 
+					CreateSession(token.Content.access_token),
+					new CookieOptions()
+					{
+						Path = "/",
+						HttpOnly = false,
+						Secure = false
+					});
+			return new RedirectResult("/User/ConfigureRecommendations");
         }
+
+        public IActionResult ConfigureRecommendations()
+		{
+			if (!Request.Cookies.ContainsKey("session_token"))
+				return Error();
+
+			var token = GetAccessToken(Request.Cookies["session_token"]);
+			var categories = Program.spotify.BrowseAllCategoriesAsync(token).Result;
+			ViewData["Message"] = string.Join("\n", categories.Select(c => c.name));
+			ViewData["Categories"] = categories.Select(c => new KeyValuePair<string, string>(c.id, c.name));
+			return View();
+		}
+
+		public IActionResult ShowRecommendations(string category)
+		{
+			if (!Request.Cookies.ContainsKey("session_token"))
+				return Error();
+
+			var token = GetAccessToken(Request.Cookies["session_token"]);
+			return View();
+		}
 
         public IActionResult Error()
         {

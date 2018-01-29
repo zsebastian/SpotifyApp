@@ -1,0 +1,21 @@
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="row">
+    <div class="col-md-3">
+        <h2>Overview</h2>
+        <ul>
+            <li>@ViewData["Message"]</li>
+        </ul>
+        <form action="/User/ShowRecommendations/" method="GET">
+			<label>Select Category</label>
+			<select name="category">
+			@foreach (var category in (IEnumerable<KeyValuePair<string, string>>)ViewData["Categories"]) { 
+				<option value = "@category.Key">@category.Value</option>
+			}
+			</select>
+			<input type="submit" value="Submit">
+		</form>
+    </div>
+</div>
