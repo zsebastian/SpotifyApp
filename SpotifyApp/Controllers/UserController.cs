@@ -70,6 +70,17 @@ namespace SpotifyApp.Controllers
 			var token = GetAccessToken(Request.Cookies["session_token"]);
 			var playlists = Program.spotify.BrowseAllCategoryPlaylistsAsync(category, token).Result;
 			ViewData["Message"] = string.Join(", ", playlists.Select(c => c.name));
+			foreach(var p in playlists)
+			{
+				var id = p.id;
+				var owner = p.owner.uri.Split(':')[2];
+				var tracks = Program.spotify.GetPlaylistTracks(owner, id, token).Result;
+				Console.WriteLine("[{0}] {1}/{2}", p.name, owner, id);
+				foreach(var t in tracks.Content.tracks.items)
+				{
+					Console.WriteLine("  {0}", t.track.name);
+				}
+			}
 
 			return View();
 		}

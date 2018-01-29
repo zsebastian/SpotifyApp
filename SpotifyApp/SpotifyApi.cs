@@ -213,6 +213,35 @@ namespace SpotifyApp
 			public Inner playlists;
 		}
 
+		public struct Track
+		{
+			public string name;
+		}
+
+		public struct PlaylistTrack
+		{
+			public DateTime added_at;
+			public User added_by;
+			public bool is_local;
+			public Track track;
+		}
+
+		public struct Playlist
+		{
+			public struct Inner
+			{
+				public string href;
+				public PlaylistTrack[] items; 
+				public int limit;
+				public int offset;
+				public int total;
+				public string next;
+				public string prev;
+			}
+
+			public Inner tracks;
+		}
+
 		public async Task<Category[]> BrowseAllCategoriesAsync(string token)
 		{
 			List<Category> categories = new List<Category>();
@@ -266,6 +295,16 @@ namespace SpotifyApp
 		public async Task<Response<BrowsedPlaylists>> BrowseCategoryPlaylistsAsync(string categoryId, int offset, int limit, string token)
 		{
 			return await GetAsync<BrowsedPlaylists>(string.Format("/browse/categories/{0}/playlists/?offset={1}&limit={2}", categoryId, offset, limit),
+					new AccessTokenAuthenticator(token));
+		}
+
+		public async Task<Response<Playlist>> GetPlaylistTracks(string user, string playlist, string token)
+		{
+			// Note: it seems we need to use the next object to iterate over the list.
+			// default limit seems to be 100? And there is no way to change that. I think.
+			return await GetAsync<Playlist>(string.Format("/users/{0}/playlists/{1}/?{2}",
+					user, playlist,
+					"fields=tracks.items(track(name,href,album(name,href)))"),
 					new AccessTokenAuthenticator(token));
 		}
 
@@ -323,11 +362,12 @@ namespace SpotifyApp
 					Method = method,
 					RequestUri = new Uri(string.Format("{0}{1}", baseUri, uri))
 				};
-				authenticator.Authenticate(httpClient, message);
+				if (authenticator != null) 
+					authenticator.Authenticate(httpClient, message);
+
 				if (content != null)
-				{
 					message.Content = content;
-				}
+
 				var response = await httpClient.SendAsync(message);
 				T responseContent = default(T);
 				string responseString = null;
@@ -341,7 +381,7 @@ namespace SpotifyApp
 				}
 				catch(Exception e)
 				{
-					Console.WriteLine("Exception reading content: {0}", e);
+					Console.WriteLine("Exception reading content [{0}:{1}]: {2}", response.StatusCode, response.ReasonPhrase, e);
 				}
 				return new Response<T>()
 				{
