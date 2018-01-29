@@ -180,7 +180,7 @@ namespace SpotifyApp
 			public string url;
 		}
 
-		public struct Playlist
+		public struct BrowsedPlaylist
 		{
 			public bool collaborative;
 			public Dictionary<string, string> external_urls;
@@ -197,12 +197,12 @@ namespace SpotifyApp
 			public string uri;
 		}
 
-		public struct Playlists
+		public struct BrowsedPlaylists
 		{
 			public struct Inner
 			{
 				public string href;
-				public Playlist[] items; 
+				public BrowsedPlaylist[] items; 
 				public int limit;
 				public int offset;
 				public int total;
@@ -241,9 +241,9 @@ namespace SpotifyApp
 					new AccessTokenAuthenticator(token));
 		}
 
-		public async Task<Playlist[]> BrowseAllCategoryPlaylistsAsync(string categoryId, string token)
+		public async Task<BrowsedPlaylist[]> BrowseAllCategoryPlaylistsAsync(string categoryId, string token)
 		{
-			List<Playlist> playlists = new List<Playlist>();
+			List<BrowsedPlaylist> playlists = new List<BrowsedPlaylist>();
 			int offset = 0;
 			int limit = 10;
 			var next = await BrowseCategoryPlaylistsAsync(categoryId, offset, limit, token);
@@ -263,9 +263,9 @@ namespace SpotifyApp
 			return playlists.ToArray();
 		}
 
-		public async Task<Response<Playlists>> BrowseCategoryPlaylistsAsync(string categoryId, int offset, int limit, string token)
+		public async Task<Response<BrowsedPlaylists>> BrowseCategoryPlaylistsAsync(string categoryId, int offset, int limit, string token)
 		{
-			return await GetAsync<Playlists>(string.Format("/browse/categories/{0}/playlists/?offset={1}&limit={2}", categoryId, offset, limit),
+			return await GetAsync<BrowsedPlaylists>(string.Format("/browse/categories/{0}/playlists/?offset={1}&limit={2}", categoryId, offset, limit),
 					new AccessTokenAuthenticator(token));
 		}
 
