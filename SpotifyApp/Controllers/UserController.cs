@@ -26,6 +26,11 @@ namespace SpotifyApp.Controllers
 
         public IActionResult Index()
         {
+        	string token;
+			if (Request.Cookies.TryGetValue("session_token", out token) && 
+				sessions.GetAccessToken(token) != null)
+				return new RedirectResult("/Recommendations");
+
 			var uri = spotify.AuthorizeUri(redirectUri);
             return Redirect(uri);
         }
