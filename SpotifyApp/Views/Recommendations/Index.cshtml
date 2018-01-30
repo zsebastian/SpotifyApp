@@ -2,27 +2,25 @@
     ViewData["Title"] = "Home Page";
 }
 
-<div class="row">
-    <div class="col-md-3">
-        <h2>Overview</h2>
-        <ul>
-            <li>@ViewData["Message"]</li>
-        </ul>
-        <form action="/Recommendations/Show/" method="GET">
-			<label>Select Category</label>
-			<select name="category">
-			@foreach (var category in (IEnumerable<KeyValuePair<string, string>>)ViewData["Categories"]) { 
-				<option value = "@category.Key">@category.Value</option>
-			}
-			</select>
-			<label>Acousticness</label><input name="acousticness" type="range" min="0" max="1" step="0.01" />
-			<label>Danceability</label><input name="danceability" type="range" min="0" max="1" step="0.01" />
-			<label>Energy</label><input name="energy" type="range" min="0" max="1" step="0.01" />
-			<label>Loudness</label><input name="loudness" type="range" min="0" max="1" step="0.01" />
-			<label>Liveness</label><input name="liveness" type="range" min="0" max="1" step="0.01" />
-			<label>Instrumentalness</label><input name="instrumentalness" type="range" min="0" max="1" step="0.01" />
-			<label>Valence</label><input name="valence" type="range" min="0" max="1" step="0.01" />
-			<input type="submit" value="Submit">
-		</form>
-    </div>
-</div>
+<h2>Set criteria</h2>
+<form action="/Recommendations/Show/" method="GET">
+	<label>Select Category</label>
+	<select name="category">
+	@foreach (var category in (IEnumerable<KeyValuePair<string, string>>)ViewData["Categories"]) { 
+		<option value = "@category.Key">@category.Value</option>
+	}
+	</select>
+	<br>
+	<label>Acousticness</label><input name="acousticness" type="range" min="0" max="1" step="0.01" />
+	<label>Danceability</label><input name="danceability" type="range" min="0" max="1" step="0.01" />
+	<br>
+	<label>Energy</label><input name="energy" type="range" min="0" max="1" step="0.01" />
+	<label>Loudness</label><input name="loudness" type="range" min="0" max="1" step="0.01" />
+	<br>
+	<label>Liveness</label><input name="liveness" type="range" min="0" max="1" step="0.01" />
+	<label>Instrumentalness</label><input name="instrumentalness" type="range" min="0" max="1" step="0.01" />
+	<br>
+	<label>Valence</label><input name="valence" type="range" min="0" max="1" step="0.01" />
+	<br>
+	<input type="submit" value="Make Recommendations">
+</form>

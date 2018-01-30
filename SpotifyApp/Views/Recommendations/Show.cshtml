@@ -2,10 +2,11 @@
     ViewData["Title"] = "Home Page";
 }
 
-<div class="row">
-    <div class="col-md-3">
-		@foreach (var track in (IEnumerable<string>)ViewData["Tracks"]) { 
-			<iframe src="https://open.spotify.com/embed?uri=spotify:track:@track" frameborder="0" allowtransparency="true"></iframe>
-		}
-    </div>
-</div>
+<p>
+These are the 10 recommended tracks that beest fit your your criteria:
+</p>
+@foreach (var track in (IEnumerable<string>)ViewData["Tracks"]) { 
+	<iframe src="https://open.spotify.com/embed?uri=spotify:track:@track" frameborder="0" allowtransparency="true"></iframe>
+}
+<br>
+<a asp-area="" asp-controller="User" asp-action="Index">Try Again</a>
