@@ -16,3 +16,5 @@ Set ClientId and ClientSecret in config.json. You can also change the redirect U
 
 Once set up, you can just start the app as you want. `dotnet run --project SpotifyApp` will work, or you can just start
 it from Visual Studio.
+
+Once started just open the webpage in your browser, the default url is `http://localhost:5000`.
