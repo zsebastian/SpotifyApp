@@ -13,3 +13,6 @@ path of the uri you will need to fix routing etc so the correct handler is calle
 (SpotifyApp.User.Authorized).
 
 Set ClientId and ClientSecret in config.json. You can also change the redirect URI there if you need to.
+
+Once set up, you can just start the app as you want. `dotnet run --project SpotifyApp` will work, or you can just start
+it from Visual Studio.
