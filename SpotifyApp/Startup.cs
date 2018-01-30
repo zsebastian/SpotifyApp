@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace SpotifyApp
 {
@@ -22,6 +23,10 @@ namespace SpotifyApp
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc();
+
+        	services.AddSingleton<IMemoryCache, MemoryCache>();
+			services.AddSingleton(Config.From("config.json"));
+            services.AddSingleton<SpotifyApi, SpotifyApi>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

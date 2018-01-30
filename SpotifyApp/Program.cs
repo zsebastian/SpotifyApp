@@ -14,18 +14,9 @@ namespace SpotifyApp
 {
     public static class Program
     {
-    	public static Config config;
-    	public static SpotifyApi spotify;
-    	public static MemoryCache cache;
-
         public static void Main(string[] args)
         {
-        	config = Config.From("config.json");
-        	using (spotify = new SpotifyApi(config))
-        	using (cache = new MemoryCache(new MemoryCacheOptions()))
-			{
-				BuildWebHost(args).Run();
-			}
+			BuildWebHost(args).Run();
         }
 
         public static IWebHost BuildWebHost(string[] args) =>

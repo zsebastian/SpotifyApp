@@ -15,23 +15,32 @@ namespace SpotifyApp.Controllers
     public class UserController : Controller
     {
     	string redirectUri = "http://localhost:5000/User/Authorized/";
+    	SpotifyApi spotify;
+    	IMemoryCache cache;
+
+    	public UserController(SpotifyApi spotify, IMemoryCache cache)
+		{
+			this.spotify = spotify;
+			this.cache = cache;
+		}
+
         public IActionResult Index()
         {
-			var uri = Program.spotify.AuthorizeUri(redirectUri);
+			var uri = spotify.AuthorizeUri(redirectUri);
             return Redirect(uri);
         }
 
         string CreateSession(string accessToken)
 		{
 			var sessionToken = Convert.ToBase64String(Guid.NewGuid().ToByteArray());
-			Program.cache.Set(string.Format("accessToken[{0}]", sessionToken), accessToken, TimeSpan.FromHours(3));
+			cache.Set(string.Format("accessToken[{0}]", sessionToken), accessToken, TimeSpan.FromHours(3));
 			return sessionToken;
 		}
 
 		string GetAccessToken(string sessionToken)
 		{
 			string ret;
-			if (!Program.cache.TryGetValue(string.Format("accessToken[{0}]", sessionToken), out ret))
+			if (!cache.TryGetValue(string.Format("accessToken[{0}]", sessionToken), out ret))
 				ret = null;
 			return ret;
 		}
@@ -40,7 +49,7 @@ namespace SpotifyApp.Controllers
         {
         	if (error != null) return Error();
 
-			var token = Program.spotify.GetTokenAsync(redirectUri, code).Result;
+			var token = spotify.GetTokenAsync(redirectUri, code).Result;
 			Response.Cookies.Append("session_token", 
 					CreateSession(token.Content.access_token),
 					new CookieOptions()
@@ -58,7 +67,7 @@ namespace SpotifyApp.Controllers
 				return Error();
 
 			var token = GetAccessToken(Request.Cookies["session_token"]);
-			var categories = Program.spotify.BrowseAllCategoriesAsync(token).Result;
+			var categories = spotify.BrowseAllCategoriesAsync(token).Result;
 			ViewData["Message"] = string.Join(", ", categories.Select(c => c.name));
 			ViewData["Categories"] = categories.Select(c => new KeyValuePair<string, string>(c.id, c.name));
 			return View();
@@ -70,11 +79,11 @@ namespace SpotifyApp.Controllers
 				{
 					var id = p.id;
 					var owner = p.owner.uri.Split(':')[2];
-					return Program.spotify.GetPlaylistTracks(owner, id, token);
+					return spotify.GetPlaylistTracks(owner, id, token);
 				}).SelectMany(t => t.Result.Content.tracks.items)
 				.Select(t => t.track.id)
 				.Batch(100)
-				.Select(ids => Program.spotify.GetAudioFeatures(ids.ToArray(), token))
+				.Select(ids => spotify.GetAudioFeatures(ids.ToArray(), token))
 				.SelectMany(af => af.Result.Content.audio_features)
 				// Some audio features are null.
 				.Where(af => af != null);
@@ -97,7 +106,7 @@ namespace SpotifyApp.Controllers
 			if (!Request.Cookies.ContainsKey("session_token"))
 				return Error();
 			var token = GetAccessToken(Request.Cookies["session_token"]);
-			var playlists = Program.spotify.BrowseAllCategoryPlaylistsAsync(category, token).Result;
+			var playlists = spotify.BrowseAllCategoryPlaylistsAsync(category, token).Result;
 			ViewData["Message"] = string.Join(", ", playlists.Select(c => c.name));
 			var audioFeatures = GetAllAudioFeatures(playlists, token);
 			var bestFit = audioFeatures.OrderBy(f => 
