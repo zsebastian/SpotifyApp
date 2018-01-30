@@ -1,4 +1,5 @@
 {
 	"ClientId": null,
-	"ClientSecret": null
+	"ClientSecret": null,
+	"RedirectUri": "http://localhost:5000/User/Authorized/"
 }

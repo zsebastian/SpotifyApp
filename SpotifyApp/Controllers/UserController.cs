@@ -14,14 +14,15 @@ namespace SpotifyApp.Controllers
 {
     public class UserController : Controller
     {
-    	string redirectUri = "http://localhost:5000/User/Authorized/";
     	SpotifyApi spotify;
     	ISessions sessions;
+    	string redirectUri;
 
-    	public UserController(SpotifyApi spotify, ISessions sessions)
+    	public UserController(SpotifyApi spotify, ISessions sessions, Config config)
 		{
 			this.spotify = spotify;
 			this.sessions = sessions;
+			redirectUri = config.RedirectUri;
 		}
 
         public IActionResult Index()

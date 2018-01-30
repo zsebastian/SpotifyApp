@@ -12,5 +12,6 @@ namespace SpotifyApp
 		
 		public string ClientId;
 		public string ClientSecret;
+		public string RedirectUri;
 	}
 }
