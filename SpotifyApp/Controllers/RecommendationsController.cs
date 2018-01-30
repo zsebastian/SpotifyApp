@@ -15,20 +15,12 @@ namespace SpotifyApp.Controllers
     public class RecommendationsController : Controller
     {
     	SpotifyApi spotify;
-    	IMemoryCache cache;
+    	ISessions sessions;
 
-    	public RecommendationsController(SpotifyApi spotify, IMemoryCache cache)
+    	public RecommendationsController(SpotifyApi spotify, ISessions sessions)
 		{
 			this.spotify = spotify;
-			this.cache = cache;
-		}
-
-		string GetAccessToken(string sessionToken)
-		{
-			string ret;
-			if (!cache.TryGetValue(string.Format("accessToken[{0}]", sessionToken), out ret))
-				ret = null;
-			return ret;
+			this.sessions = sessions;
 		}
 
         public IActionResult Index()
@@ -36,7 +28,7 @@ namespace SpotifyApp.Controllers
 			if (!Request.Cookies.ContainsKey("session_token"))
 				return Error();
 
-			var token = GetAccessToken(Request.Cookies["session_token"]);
+			var token = sessions.GetAccessToken(Request.Cookies["session_token"]);
 			var categories = spotify.BrowseAllCategoriesAsync(token).Result;
 			ViewData["Message"] = string.Join(", ", categories.Select(c => c.name));
 			ViewData["Categories"] = categories.Select(c => new KeyValuePair<string, string>(c.id, c.name));
@@ -75,7 +67,7 @@ namespace SpotifyApp.Controllers
 		{
 			if (!Request.Cookies.ContainsKey("session_token"))
 				return Error();
-			var token = GetAccessToken(Request.Cookies["session_token"]);
+			var token = sessions.GetAccessToken(Request.Cookies["session_token"]);
 			var playlists = spotify.BrowseAllCategoryPlaylistsAsync(category, token).Result;
 			ViewData["Message"] = string.Join(", ", playlists.Select(c => c.name));
 			var audioFeatures = GetAllAudioFeatures(playlists, token);

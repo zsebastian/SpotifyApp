@@ -25,6 +25,7 @@ namespace SpotifyApp
             services.AddMvc();
 
         	services.AddSingleton<IMemoryCache, MemoryCache>();
+        	services.AddSingleton<ISessions, InMemorySessions>();
 			services.AddSingleton(Config.From("config.json"));
             services.AddSingleton<SpotifyApi, SpotifyApi>();
         }

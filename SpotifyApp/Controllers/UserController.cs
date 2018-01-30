@@ -16,12 +16,12 @@ namespace SpotifyApp.Controllers
     {
     	string redirectUri = "http://localhost:5000/User/Authorized/";
     	SpotifyApi spotify;
-    	IMemoryCache cache;
+    	ISessions sessions;
 
-    	public UserController(SpotifyApi spotify, IMemoryCache cache)
+    	public UserController(SpotifyApi spotify, ISessions sessions)
 		{
 			this.spotify = spotify;
-			this.cache = cache;
+			this.sessions = sessions;
 		}
 
         public IActionResult Index()
@@ -30,28 +30,13 @@ namespace SpotifyApp.Controllers
             return Redirect(uri);
         }
 
-        string CreateSession(string accessToken)
-		{
-			var sessionToken = Convert.ToBase64String(Guid.NewGuid().ToByteArray());
-			cache.Set(string.Format("accessToken[{0}]", sessionToken), accessToken, TimeSpan.FromHours(3));
-			return sessionToken;
-		}
-
-		string GetAccessToken(string sessionToken)
-		{
-			string ret;
-			if (!cache.TryGetValue(string.Format("accessToken[{0}]", sessionToken), out ret))
-				ret = null;
-			return ret;
-		}
-
         public IActionResult Authorized(string state, string code, string error)
         {
         	if (error != null) return Error();
 
 			var token = spotify.GetTokenAsync(redirectUri, code).Result;
 			Response.Cookies.Append("session_token", 
-					CreateSession(token.Content.access_token),
+					sessions.CreateSession(token.Content.access_token),
 					new CookieOptions()
 					{
 						Path = "/",
@@ -93,7 +78,7 @@ namespace SpotifyApp.Controllers
 		{
 			if (!Request.Cookies.ContainsKey("session_token"))
 				return Error();
-			var token = GetAccessToken(Request.Cookies["session_token"]);
+			var token = sessions.GetAccessToken(Request.Cookies["session_token"]);
 			var playlists = spotify.BrowseAllCategoryPlaylistsAsync(category, token).Result;
 			ViewData["Message"] = string.Join(", ", playlists.Select(c => c.name));
 			var audioFeatures = GetAllAudioFeatures(playlists, token);
