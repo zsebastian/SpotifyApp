@@ -12,29 +12,15 @@ using Newtonsoft.Json;
 
 namespace SpotifyApp.Controllers
 {
-    public class UserController : Controller
+    public class RecommendationsController : Controller
     {
-    	string redirectUri = "http://localhost:5000/User/Authorized/";
     	SpotifyApi spotify;
     	IMemoryCache cache;
 
-    	public UserController(SpotifyApi spotify, IMemoryCache cache)
+    	public RecommendationsController(SpotifyApi spotify, IMemoryCache cache)
 		{
 			this.spotify = spotify;
 			this.cache = cache;
-		}
-
-        public IActionResult Index()
-        {
-			var uri = spotify.AuthorizeUri(redirectUri);
-            return Redirect(uri);
-        }
-
-        string CreateSession(string accessToken)
-		{
-			var sessionToken = Convert.ToBase64String(Guid.NewGuid().ToByteArray());
-			cache.Set(string.Format("accessToken[{0}]", sessionToken), accessToken, TimeSpan.FromHours(3));
-			return sessionToken;
 		}
 
 		string GetAccessToken(string sessionToken)
@@ -45,21 +31,17 @@ namespace SpotifyApp.Controllers
 			return ret;
 		}
 
-        public IActionResult Authorized(string state, string code, string error)
+        public IActionResult Index()
         {
-        	if (error != null) return Error();
+			if (!Request.Cookies.ContainsKey("session_token"))
+				return Error();
 
-			var token = spotify.GetTokenAsync(redirectUri, code).Result;
-			Response.Cookies.Append("session_token", 
-					CreateSession(token.Content.access_token),
-					new CookieOptions()
-					{
-						Path = "/",
-						HttpOnly = false,
-						Secure = false
-					});
-			return new RedirectResult("/Recommendations");
-        }
+			var token = GetAccessToken(Request.Cookies["session_token"]);
+			var categories = spotify.BrowseAllCategoriesAsync(token).Result;
+			ViewData["Message"] = string.Join(", ", categories.Select(c => c.name));
+			ViewData["Categories"] = categories.Select(c => new KeyValuePair<string, string>(c.id, c.name));
+			return View();
+		}
 
 		IEnumerable<SpotifyApi.AudioFeatures> GetAllAudioFeatures(IEnumerable<SpotifyApi.BrowsedPlaylist> playlist, string token)
 		{
@@ -82,7 +64,7 @@ namespace SpotifyApp.Controllers
 			return v * v;
 		}
 
-		public IActionResult ShowRecommendations(string category,
+		public IActionResult Show(string category,
 				float acousticness,
 				float danceability,
 				float energy,

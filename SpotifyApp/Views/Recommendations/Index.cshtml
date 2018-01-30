@@ -8,7 +8,7 @@
         <ul>
             <li>@ViewData["Message"]</li>
         </ul>
-        <form action="/User/ShowRecommendations/" method="GET">
+        <form action="/Recommendations/Show/" method="GET">
 			<label>Select Category</label>
 			<select name="category">
 			@foreach (var category in (IEnumerable<KeyValuePair<string, string>>)ViewData["Categories"]) { 
