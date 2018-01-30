@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using SpotifyApp.Models;
 using Microsoft.Extensions.Caching.Memory;
+using Newtonsoft.Json;
 
 namespace SpotifyApp.Controllers
 {
@@ -63,24 +64,56 @@ namespace SpotifyApp.Controllers
 			return View();
 		}
 
-		public IActionResult ShowRecommendations(string category)
+		IEnumerable<SpotifyApi.AudioFeatures> GetAllAudioFeatures(IEnumerable<SpotifyApi.BrowsedPlaylist> playlist, string token)
+		{
+			return playlist.Select(p => 
+				{
+					var id = p.id;
+					var owner = p.owner.uri.Split(':')[2];
+					return Program.spotify.GetPlaylistTracks(owner, id, token);
+				}).SelectMany(t => t.Result.Content.tracks.items)
+				.Select(t => t.track.id)
+				.Batch(100)
+				.Select(ids => Program.spotify.GetAudioFeatures(ids.ToArray(), token))
+				.SelectMany(af => af.Result.Content.audio_features)
+				// Some audio features are null.
+				.Where(af => af != null);
+		}
+
+		float Square(float v)
+		{
+			return v * v;
+		}
+
+		public IActionResult ShowRecommendations(string category,
+				float acousticness,
+				float danceability,
+				float energy,
+				float loudness,
+				float liveness,
+				float instrumentalness,
+				float valence)
 		{
 			if (!Request.Cookies.ContainsKey("session_token"))
 				return Error();
 			var token = GetAccessToken(Request.Cookies["session_token"]);
 			var playlists = Program.spotify.BrowseAllCategoryPlaylistsAsync(category, token).Result;
 			ViewData["Message"] = string.Join(", ", playlists.Select(c => c.name));
-			foreach(var p in playlists)
-			{
-				var id = p.id;
-				var owner = p.owner.uri.Split(':')[2];
-				var tracks = Program.spotify.GetPlaylistTracks(owner, id, token).Result;
-				Console.WriteLine("[{0}] {1}/{2}", p.name, owner, id);
-				foreach(var t in tracks.Content.tracks.items)
-				{
-					Console.WriteLine("  {0}", t.track.name);
-				}
-			}
+			var audioFeatures = GetAllAudioFeatures(playlists, token);
+			var bestFit = audioFeatures.OrderBy(f => 
+				Math.Sqrt(
+					Square(f.acousticness - acousticness) +
+					Square(f.danceability - danceability) +
+					Square(f.acousticness - acousticness) +
+					Square(f.energy - energy) +
+					Square(f.loudness - loudness) +
+					Square(f.liveness - liveness) +
+					Square(f.instrumentalness - instrumentalness) +
+					Square(f.valence - valence)))
+				.Take(10)
+				.Select(t => t.id)
+				.ToArray();
+			ViewData["Tracks"] = bestFit;
 
 			return View();
 		}

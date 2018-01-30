@@ -131,13 +131,13 @@ namespace SpotifyApp
 			}
 		}
 		
-		public struct Icon
+		public class Icon
 		{
 			public int height, width;
 			public string url;
 		}
 
-		public struct Category
+		public class Category
 		{
 			public string href;
 			public Icon[] icons; 
@@ -145,9 +145,9 @@ namespace SpotifyApp
 			public string name;
 		}
 
-		public struct Categories
+		public class Categories
 		{
-			public struct Inner
+			public class Inner
 			{
 				public string href;
 				public Category[] items; 
@@ -160,27 +160,28 @@ namespace SpotifyApp
 			public Inner categories;
 		}
 
-      	public struct Tracks
+      	public class Tracks
 		{
 			public string href;
 			public int total;
 		}
 
-      	public struct User
+      	public class User
 		{
 			public Dictionary<string, string> external_urls;
 			public string href;
 			public string type;
 			public string uri;
 		}
-      	public struct Image
+
+      	public class Image
 		{
 			public int height;
 			public int width;
 			public string url;
 		}
 
-		public struct BrowsedPlaylist
+		public class BrowsedPlaylist
 		{
 			public bool collaborative;
 			public Dictionary<string, string> external_urls;
@@ -197,9 +198,9 @@ namespace SpotifyApp
 			public string uri;
 		}
 
-		public struct BrowsedPlaylists
+		public class BrowsedPlaylists
 		{
-			public struct Inner
+			public class Inner
 			{
 				public string href;
 				public BrowsedPlaylist[] items; 
@@ -213,12 +214,13 @@ namespace SpotifyApp
 			public Inner playlists;
 		}
 
-		public struct Track
+		public class Track
 		{
 			public string name;
+			public string id;
 		}
 
-		public struct PlaylistTrack
+		public class PlaylistTrack
 		{
 			public DateTime added_at;
 			public User added_by;
@@ -226,9 +228,9 @@ namespace SpotifyApp
 			public Track track;
 		}
 
-		public struct Playlist
+		public class Playlist
 		{
-			public struct Inner
+			public class Inner
 			{
 				public string href;
 				public PlaylistTrack[] items; 
@@ -242,6 +244,34 @@ namespace SpotifyApp
 			public Inner tracks;
 		}
 
+		public class AudioFeatures
+		{
+
+			public float acousticness; 
+			public string analysis_url; 
+			public float danceability; 
+			public int duration_ms; 
+			public float energy; 
+			public string id; 
+			public float instrumentalness; 
+			public int key; 
+			public float liveness; 
+			public float loudness; 
+			public int mode; 
+			public float speechiness; 
+			public float tempo; 
+			public int time_signature; 
+			public string track_href; 
+			public string type; 
+			public string uri; 
+			public float valence; 
+		}
+
+		public class MultipleAudioFeatures
+		{
+			public AudioFeatures[] audio_features;
+		}
+
 		public async Task<Category[]> BrowseAllCategoriesAsync(string token)
 		{
 			List<Category> categories = new List<Category>();
@@ -249,7 +279,7 @@ namespace SpotifyApp
 			int limit = 10;
 			var next = await BrowseCategoriesAsync(offset, limit, token);
 
-			while(next.Content.categories.next != null)
+			while(next.Content.categories != null && next.Content.categories.next != null)
 			{
 				// if categories.next != null we know we can continue.
 				// It is set to the url they want us to call, but this
@@ -304,7 +334,22 @@ namespace SpotifyApp
 			// default limit seems to be 100? And there is no way to change that. I think.
 			return await GetAsync<Playlist>(string.Format("/users/{0}/playlists/{1}/?{2}",
 					user, playlist,
-					"fields=tracks.items(track(name,href,album(name,href)))"),
+					"fields=tracks.items(track(name,href,id))"),
+					new AccessTokenAuthenticator(token));
+		}
+
+		public async Task<Response<MultipleAudioFeatures>> GetAudioFeatures(string[] ids, string token)
+		{
+			if (ids.Length > 100) throw new ArgumentOutOfRangeException("id");
+			return await GetAsync<MultipleAudioFeatures>(string.Format("/audio-features/?ids={0}",
+					string.Join(",", ids)),
+					new AccessTokenAuthenticator(token));
+		}
+
+		public async Task<Response<AudioFeatures>> GetAudioFeatures(string id, string token)
+		{
+			return await GetAsync<AudioFeatures>(string.Format("/audio-features/{0}",
+					id),
 					new AccessTokenAuthenticator(token));
 		}
 

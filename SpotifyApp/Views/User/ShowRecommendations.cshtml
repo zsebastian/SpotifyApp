@@ -4,9 +4,8 @@
 
 <div class="row">
     <div class="col-md-3">
-        <h2>Overview</h2>
-        <ul>
-            <li>@ViewData["Message"]</li>
-        </ul>
+		@foreach (var track in (IEnumerable<string>)ViewData["Tracks"]) { 
+			<iframe src="https://open.spotify.com/embed?uri=spotify:track:@track" frameborder="0" allowtransparency="true"></iframe>
+		}
     </div>
 </div>
