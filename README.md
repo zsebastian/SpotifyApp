@@ -12,7 +12,8 @@ redirect URI to the settings for your app. Hosting the app as-is the default is
 path of the uri you will need to fix routing etc so the correct handler is called in the app
 (SpotifyApp.User.Authorized).
 
-Set ClientId and ClientSecret in config.json. You can also change the redirect URI there if you need to.
+Set ClientId and ClientSecret in SpotifyApp/config.json. You can also change the redirect URI there if you need to,
+otherwise leave as-is.
 
 Once set up, you can just start the app as you want. `dotnet run --project SpotifyApp` will work, or you can just start
 it from Visual Studio.
